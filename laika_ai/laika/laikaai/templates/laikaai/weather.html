@@ -1,0 +1,169 @@
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #495057;
+            text-align: center;
+        }
+        .weather-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #343a40;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .weather-info {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .weather-info img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+        .weather-info p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .loading-message, .error-message {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .loading-message {
+            color: #007bff;
+        }
+        .error-message {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <h1>Weather Forecast</h1>
+        <p id="loading" class="loading-message">Please wait...</p>
+        <div id="weather-info" class="weather-info">
+            <p id="weather-description"></p>
+            <img id="weather-image" src="" alt="Weather Icon">
+        </div>
+        <p id="error-message" class="error-message" style="display: none;"></p>
+    </div>
+
+    <script>
+        function speak(text, callback) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.volume = 1; 
+            utterance.rate = 1;   
+            utterance.pitch = 1;  
+            
+            utterance.onend = function() {
+                if (callback) {
+                    callback();
+                }
+            };
+            
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function listenForCommand() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                console.log("Speech recognition started");
+            };
+
+            recognition.onresult = function(event) {
+                const command = event.results[0][0].transcript.toLowerCase();
+                console.log("Command recognized:", command);
+
+                if (command === 'go back') {
+                    console.log("Redirecting to explore.html");
+                    window.location.href = 'explore.html';
+                } else {
+                    // Fetch weather only if the command does not match 'go back'
+                    fetchWeather(command);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Recognition error:", event.error);
+                speak("Sorry, I didn't catch that. Please try again.", listenForCommand);
+            };
+
+            recognition.onend = function() {
+                console.log("Speech recognition ended");
+                // Optionally restart recognition if needed
+                // listenForCommand();
+            };
+
+            recognition.start();
+        }
+
+        function fetchWeather(city) {
+            // Handle special case when city might be 'go back'
+            if (city.trim().toLowerCase() === 'go back') {
+                console.log("Redirecting to explore.html");
+                window.location.href = 'explore.html';
+                return; // Ensure fetchWeather is not called
+            }
+
+            fetch('/weather/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 'command': 'weather ' + city })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.weather_info) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('weather-info').style.display = 'flex';
+                    document.getElementById('weather-description').innerText = data.weather_info;
+                    speak(data.weather_info, function() {
+                        speak("Would you like to check another city's weather or go back?", listenForCommand);
+                    });
+                } else {
+                    speak("I couldn't fetch weather information. Please try again.", listenForCommand);
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                speak("An error occurred while fetching the weather data.", listenForCommand);
+            });
+        }
+
+        // Start by asking for the city
+        speak("Which city do you want the weather forecast for?", listenForCommand);
+    </script>
+    
+    
+    
+</body>
+</html> 

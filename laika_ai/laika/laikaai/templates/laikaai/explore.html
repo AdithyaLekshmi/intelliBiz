@@ -1,0 +1,378 @@
+
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="csrf-token" content="{% csrf_token %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Explore - AI Laika</title>
+        <link rel="stylesheet" href="{% static 'style.css' %}">
+       
+
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+                text-align: center;
+                margin: 35%;
+                margin-top: 0rem;
+                height: 820px;
+                border: 5px solid blue;
+            }
+            .explore-container {
+                padding: 20px;
+            }
+            .explore-item {
+                background-color: #fff;
+                margin: 20px auto;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            
+                max-width: 600px;
+            }
+            .explore-item h2 {
+                color: #333;
+            }
+            .explore-item p {
+                color: #666;
+            }
+            .explore-item.email-assist {
+                background-color: #e0f7da;
+            }
+            .explore-item.object-detection {
+                background-color: #e1bee7;
+            }
+            .explore-item.weather-forecasting {
+                background-color: #b3e5fc;
+            }
+            #microphone-button {
+                background: none;
+                border: none;
+                cursor: pointer;
+            }
+            .microphone-icon img {
+                width: 50px;
+                height: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="explore-container">
+            <h1>EXPLORE</h1>
+            <div class="explore-item email-assist">
+                <h2>Email Assistant</h2>
+                <p>I help you stay connected with others through our email sending service. Whether you need to send a quick message or a detailed email, I’m here to assist you every step of the way.</p>
+            </div>
+            <div class="explore-item object-detection">
+                <h2>Object Detection</h2>
+                <p>I help you navigate and understand your surroundings with our object detection service & provide you with real-time descriptions of objects around you, making your environment more accessible and easier to interact with.</p>
+            </div>
+            <div class="explore-item weather-forecasting">
+                <h2>Weather Forecasting</h2>
+                <p>I provide real-time weather updates to keep you informed. From temperature to forecasts, I've got you covered. Just ask, 'Weather,' to get started.</p>
+            </div>
+            <button id="microphone-button">
+                <div class="microphone-icon">
+                    <img src="{% static 'images/mic.png' %}" alt="Microphone">
+                </div>
+            </button>
+        </div>
+
+
+    <!-- <script>
+        window.onload = function() {
+            // Prepare the speech synthesis utterance
+            var exploreUtterance = new SpeechSynthesisUtterance("Which one you want... Email assistant....Object detection...weather... or what else do you want to know");
+    
+            function setFemaleVoice() {
+                var voices = window.speechSynthesis.getVoices();
+                var femaleVoice = voices.find(voice => voice.name.toLowerCase().includes("zira"));
+                
+                if (femaleVoice) {
+                    exploreUtterance.voice = femaleVoice;
+                } else {
+                    console.log("Female voice not found, using default voice.");
+                }
+                
+                window.speechSynthesis.speak(exploreUtterance);
+    
+                // Start listening only after the assistant has finished speaking
+                exploreUtterance.onend = function() {
+                    startListening();
+                };
+            }
+    
+            if (window.speechSynthesis.getVoices().length === 0) {
+                window.speechSynthesis.onvoiceschanged = setFemaleVoice;
+            } else {
+                setFemaleVoice();
+            }
+        };
+    
+        function handleCommand(command) {
+            command = command.toLowerCase();
+            console.log(`Received command: ${command}`);
+    
+            if (command.includes('current time')) {
+                fetch('/current_time/')
+                    .then(response => response.json())
+                    .then(data => {
+                        speak(data.time);
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else if (command.includes('tell me a joke') || command.includes('joke')) {
+                fetch('/get_joke/')
+                    .then(response => response.json())
+                    .then(data => {
+                        speak(data.joke);
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else if (command.includes('object detection')) {
+                window.location.href = '/object/';
+            } else if (command.includes('weather')) {
+                window.location.href = '/weather/';
+            } else if (command.includes('email') || command.includes('email assistant') || command.includes('mail')) {
+                window.location.href = '/email/';
+            } 
+            else if (command.includes('tell me a joke')) {
+            fetch('/tell_joke/')
+                .then(response => response.json())
+                .then(data => {
+                    // Adding a short delay before speaking
+                    setTimeout(() => {
+                        speak(data.joke);
+                    }, 200); // 200 milliseconds delay
+                })
+                .catch(error => console.error('Error:', error));
+        }  else if (command.includes('play')) {
+        let songName = command.replace('play', '').trim();
+        if (songName) {
+            fetch(`/process_command/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: `play ${songName}` }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    window.open(data.response, '_blank');
+                    navigate = true;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    } else {
+                speak("Sorry, I didn't catch that. Please say it again.");
+            }
+        }
+    
+        function startListening() {
+            var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+    
+            recognition.onresult = function(event) {
+                var command = event.results[0][0].transcript.toLowerCase();
+                handleCommand(command);
+            };
+    
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+            };
+    
+            recognition.onend = function() {
+                startListening(); // Continue listening after recognition ends
+            };
+    
+            recognition.start();
+        }
+    
+        function speak(message) {
+            var utterance = new SpeechSynthesisUtterance(message);
+            var voices = window.speechSynthesis.getVoices();
+            var femaleVoice = voices.find(voice => voice.name.toLowerCase().includes("zira"));
+    
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+    
+            utterance.rate = 1.0; // Slow down the speaking rate
+            utterance.pitch = 3.5; // Adjust the pitch for clearer speech
+    
+            utterance.onend = function() {
+                // Ensure no overlap of speech synthesis
+                console.log('Finished speaking.');
+            };
+    
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+     -->
+
+     <script>
+        
+        window.onload = function() {
+            // Prepare the speech synthesis utterance
+            var exploreUtterance = new SpeechSynthesisUtterance("Which one you want... Email assistant....Object detection...weather... or what else do you want to know");
+        
+            // Function to set the female voice
+            function setFemaleVoice() {
+                var voices = window.speechSynthesis.getVoices();
+                var femaleVoice = voices.find(voice =>
+                    voice.name.toLowerCase().includes("zira")
+                );
+                
+                if (femaleVoice) {
+                    exploreUtterance.voice = femaleVoice;
+                } else {
+                    console.log("Female voice not found, using default voice.");
+                }
+                
+                // Speak the initial prompt
+                window.speechSynthesis.speak(exploreUtterance);
+        
+                // Start voice recognition after the initial prompt is spoken
+                exploreUtterance.onend = function() {
+                    startListening();
+                };
+            }
+        
+            // Set the voice when the voices are loaded
+            if (window.speechSynthesis.getVoices().length === 0) {
+                window.speechSynthesis.onvoiceschanged = setFemaleVoice;
+            } else {
+                setFemaleVoice();
+            }
+        };
+        function getCSRFToken() {
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    return csrfToken;
+}
+        // Function to handle recognized commands
+        function handleCommand(command) {
+            command = command.toLowerCase();
+            let navigate = false;
+        
+            if (command.includes('current time')) {
+                fetch('/current_time/')
+                    .then(response => response.json())
+                    .then(data => {
+                        speak(data.time);
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else if (command.includes('object detection')) {
+                window.location.href = '/object/';
+                navigate = true;
+            } else if (command.includes('weather')) {
+                window.location.href = '/weather/';
+                navigate = true;
+            } else if (command.includes('email') || command.includes('email assistant') || command.includes('mail')) {
+                window.location.href = '/email/';
+                navigate = true;
+            } else if (command.includes('tell me a joke')) {
+                fetch('/tell_joke/')
+                    .then(response => response.json())
+                    .then(data => {
+                        speak(data.joke);
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else if (command.includes('play')) {
+                let songName = command.replace('play', '').trim();
+                if (songName) {
+                    let youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(songName)}`;
+                    window.open(youtubeSearchUrl, '_blank');
+                }
+            }
+            else if (command.includes('where is')) {
+        const placeName = command.replace('where is', '').trim();
+        if (placeName) {
+            fetch('/place_info/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: `where is ${placeName}` })
+            })
+            .then(response => response.json())
+            .then(data => {
+                speak(data.info); // Speak the place information
+                if (data.url) {
+                    window.open(data.url, '_blank'); // Open the location in a new tab
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        navigate = true;
+            }
+            else if (command.includes('go back')) {
+                    window.location.href = '/explore/';
+            }else if (command.includes('who is') || command.includes('about')) {
+        fetch('/process_command/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({command: command})
+        })
+        .then(response => response.json())
+        .then(data => {
+            speak(data.response);
+        })
+        .catch(error => console.error('Error:', error));
+    } 
+            
+           
+        
+            if (!navigate && !command.includes('current time') && !command.includes('tell me a joke') && !command.includes('play') && !command.includes('go back')) {
+                speak("hear.");
+            }
+        }
+        
+        // Function to initiate voice recognition
+        function startListening() {
+            var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+        
+            recognition.onresult = function(event) {
+                var command = event.results[0][0].transcript.toLowerCase();
+                handleCommand(command);
+            };
+        
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+            };
+        
+            recognition.onend = function() {
+                startListening(); // Restart listening immediately
+            };
+        
+            recognition.start();
+        }
+        
+        // Function to speak a message (if needed)
+        function speak(message) {
+            var utterance = new SpeechSynthesisUtterance(message);
+            var voices = window.speechSynthesis.getVoices();
+            var femaleVoice = voices.find(voice =>
+                voice.name.toLowerCase().includes("zira")
+            );
+        
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+        
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        </script>
+        
+    </body>
+    </html>
+
+
+

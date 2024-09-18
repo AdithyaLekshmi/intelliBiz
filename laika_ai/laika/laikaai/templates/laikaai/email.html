@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Assist</title>
+    <style>
+        .main{
+            font-family: Arial, sans-serif;
+            /* background: linear-gradient(to bottom, #76e5ca, #1d9255); */
+            border: 5px solid blue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            margin: 35%;
+            margin-top: 0rem;
+            height: 659px;
+            border: 5px solid blue;
+        }
+        .button {
+            background-color: #8ae3d3;
+            border: none;
+            border-radius: 20px;
+            color: #000;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .icon {
+            font-size: 50px;
+            color: #a3e6f7;
+            margin-bottom: 20px;
+        }
+        .illustration {
+            width: 350px;
+            height: 40%;
+            margin-bottom: 20px;
+        }
+        .instruction {
+            font-size: 18px;
+            color: #5b80ac;
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+        .mic-icon {
+            font-size: 40px;
+            color: #fff;
+            background-color: #586cf1;
+            border-radius: 50%;
+            padding: 10px;
+        }
+        .up{
+            margin-right: 80px;
+            margin-top: 3px;
+        }
+        .down{
+            margin-left: 80px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div><img src="{% static 'images/up.png' %}" alt="" class="up"></div>
+    <div class="icon">@</div>
+    <button class="button">Open Gmail</button><br><br><br>
+    <img src="{% static 'images/email.gif' %}" alt="Illustration" class="illustration">
+    <div class="instruction">Say ‘open Gmail’ to access email</div>
+    <div><img src="{% static 'images/dw.jpg' %}" alt="" class="down"></div>
+
+    <script>
+        function speak(text) {
+            var speech = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(speech);
+        }
+    
+        function startRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+    
+            recognition.onresult = function(event) {
+                var command = event.results[0][0].transcript.toLowerCase();
+                handleCommand(command);
+            };
+    
+            recognition.start();
+        }
+    
+        function handleCommand(command) {
+            fetch('/email_assistant/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({command: command})
+            })
+            .then(response => response.json())
+            .then(data => {
+                speak(data.response);
+            });
+        }
+    
+        function initializeAssistant() {
+            fetch('/email_assistant/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({command: ''})
+            })
+            .then(response => response.json())
+            .then(data => {
+                speak(data.response);
+                setTimeout(startRecognition, 2000);
+            });
+        }
+    
+        initializeAssistant();
+    </script>
+    
+</div>
+</body>
+</html>
